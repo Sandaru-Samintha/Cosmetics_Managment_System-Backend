@@ -7,18 +7,18 @@ export function createUser(req, res) {
 //===================================================
 //only admin can create the another admin account
 //===================================================
-  if(req.body.role == "admin"){ 
+  if(req.body.role == "admin"){
     if(req.user!= null){
       if(req.user.role != "admin")
       {
-        res.status(403).jason({
+        res.status(403).json({
           message:"You are not authorized to create an admin accounts"
         })
         return
       }
     }
   }else{
-    res.status(403).jason({
+    res.status(403).json({
       message:"You are not authorized to create an admin accounts.please login first"
     })
     return
