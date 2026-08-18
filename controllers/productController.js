@@ -4,26 +4,17 @@ import Product from "../models/product.js";
 
 export function saveProduct(req,res){
 
-  if(req.user == null){
+  if(!isAdmin(req)){
     res.status(403).json({
-      message : "Unauthorized"
+      message : "You are not authorized to add a product"
     })
     return
   }
 
-  if(req.user.role != "admin"){
-    res.status(403).json({
-      message : "Unauthorized You need to be an admin"
-    })
-    return
-  }
-  //console.log(req.body);
+  const product = new Product(
+    req.body
+  );
 
-  const product = new Product({
-    name : req.body.name,
-    price : req.body.price,
-    description : req.body.description
-  })
   product
   .save()
   .then(()=>{
@@ -37,14 +28,50 @@ export function saveProduct(req,res){
   })
 }
 
-export function getProduct(req,res){
-  Product.find()
-  .then((data)=>{
-    res.json(data)
-  })
-  .catch(()=>{
+export async function getProduct(req,res){
+  try{
+    if(isAdmin(req)){
+      const products = await Product.find()
+      res.json(products)
+    }else{
+      const products = await Product.find({isAvailable : true})
+      res.json(products)
+    }
+  }catch(err){
     res.json({
-      message : "Failed to fetch the data"
+      message: "Failed to get products",
+      error:err
     })
-  })
+  }
+}
+
+export async function deleteProduct(req,res){
+  if(!isAdmin(req)){
+    res.status({
+      message:"You are not authorized to delete a product"
+    })
+  }
+  try {
+    await Product.deleteOne({productId : req.params.productId})
+    res.json({
+      message : "Product deleted successfully"
+    })
+  } catch (err) {
+    res.status(500).json({
+      message : "failed to delete products",
+      error : err
+    })
+  }
+  
+}
+
+//create the function of check is admin
+export function isAdmin(req){
+  if(req.user==null){
+    return false
+  }
+  if(req.user.role != "admin"){
+    return false
+  }
+  return true
 }
